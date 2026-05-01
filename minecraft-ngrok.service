@@ -1,0 +1,57 @@
+# /etc/systemd/system/minecraft-ngrok.service
+#
+# Manages the ngrok tunnel + Cloudflare DNS update for the Minecraft server.
+#
+# Installation:
+#   sudo cp minecraft-ngrok.sh /usr/local/bin/minecraft-ngrok.sh
+#   sudo chmod +x /usr/local/bin/minecraft-ngrok.sh
+#   sudo cp minecraft-ngrok.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now minecraft-ngrok.service
+#
+# Useful commands:
+#   sudo systemctl status minecraft-ngrok
+#   sudo journalctl -u minecraft-ngrok -f
+
+[Unit]
+Description=ngrok TCP tunnel + Cloudflare DNS for Minecraft
+# Start after the network is fully up and the local Minecraft server is ready.
+# Replace 'minecraft.service' with your actual server unit name if different.
+After=network-online.target minecraft.service
+Wants=network-online.target
+# If your Minecraft server is managed by systemd, uncomment the next line:
+# Requires=minecraft.service
+
+[Service]
+Type=simple
+
+# Run as a dedicated low-privilege user for security.
+# Create with: sudo useradd -r -s /sbin/nologin ngrok-dns
+User=ngrok-dns
+Group=ngrok-dns
+
+ExecStart=/usr/local/bin/minecraft-ngrok.sh
+
+# --- Restart behaviour ---
+# Restart automatically if the tunnel drops (e.g. ngrok session limit).
+Restart=on-failure
+RestartSec=15s
+# Give the script enough time to poll for ngrok before systemd declares it failed.
+TimeoutStartSec=90s
+
+# --- Logging ---
+# Systemd captures stdout/stderr; view with: journalctl -u minecraft-ngrok
+StandardOutput=journal
+StandardError=journal
+
+# --- Hardening (optional but recommended) ---
+# Prevent the service from writing anywhere except /var/log/ngrok.log
+# Adjust or remove if your setup differs.
+ReadWritePaths=/var/log/ngrok.log
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
