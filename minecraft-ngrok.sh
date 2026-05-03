@@ -49,7 +49,7 @@ check_deps() {
 # WAIT FOR NGROK — polls the local API until a TCP tunnel appears or times out
 # -----------------------------------------------------------------------------
 wait_for_ngrok() {
-    echo "[*] Waiting for ngrok tunnel to become available (timeout: ${NGROK_WAIT_TIMEOUT}s)..."
+    echo "[*] Waiting for ngrok tunnel to become available (timeout: ${NGROK_WAIT_TIMEOUT}s)..." >&2
     local elapsed=0
     local interval=2
 
@@ -62,7 +62,7 @@ wait_for_ngrok() {
             local tunnel
             tunnel=$(echo "$response" | jq -r '.tunnels[] | select(.proto=="tcp") | .public_url' 2>/dev/null | head -n1)
             if [[ -n "$tunnel" ]]; then
-                echo "[+] ngrok tunnel is up: $tunnel"
+                echo "[+] ngrok tunnel is up: $tunnel" >&2
                 echo "$tunnel"   # caller captures this
                 return 0
             fi
