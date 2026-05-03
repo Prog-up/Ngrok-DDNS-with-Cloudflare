@@ -166,14 +166,29 @@ The included `minecraft-ngrok.service` file manages the script as a proper syste
 # 1. Create a dedicated low-privilege service user
 sudo useradd -r -s /sbin/nologin ngrok-dns
 
-# 2. Create and own the ngrok log file
+# 2. Create a config directory owned by the service user
+sudo mkdir -p /etc/ngrok
+sudo chown ngrok-dns:ngrok-dns /etc/ngrok
+sudo chmod 700 /etc/ngrok   # only ngrok-dns can read it (contains a secret)
+
+# 3. Write the config file
+sudo -u ngrok-dns bash -c 'cat > /etc/ngrok/ngrok.yml' << 'EOF'
+version: "3"
+agent:
+  authtoken: YOUR_NGROK_AUTHTOKEN
+EOF
+
+# 4. Lock down permissions
+sudo chmod 600 /etc/ngrok/ngrok.yml
+
+# 5. Create and own the ngrok log file
 sudo touch /var/log/ngrok.log
 sudo chown ngrok-dns:ngrok-dns /var/log/ngrok.log
 
-# 3. Install the service file
+# 6. Install the service file
 sudo cp minecraft-ngrok.service /etc/systemd/system/
 
-# 4. Reload systemd and enable the service
+# 7. Reload systemd and enable the service
 sudo systemctl daemon-reload
 sudo systemctl enable --now minecraft-ngrok.service
 ```
