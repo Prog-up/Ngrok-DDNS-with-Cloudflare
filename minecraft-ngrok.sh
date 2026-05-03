@@ -160,7 +160,7 @@ update_cloudflare_dns() {
     cname_payload=$(jq -n \
         --arg name    "$CF_DOMAIN" \
         --arg content "$ngrok_host" \
-        '{type:"CNAME", name:$name, content:$content, ttl:60, proxied:false}')
+        '{type:"CNAME", name:$name, content:$content, ttl:0, proxied:false}')
     upsert_record "CNAME" "$cname_payload"
 
     # 2. SRV: _minecraft._tcp.mc.example.com → 0 5 <PORT> mc.example.com
@@ -174,7 +174,7 @@ update_cloudflare_dns() {
         '{
             type: "SRV",
             name: $name,
-            ttl:  60,
+            ttl:  0,
             data: {
                 service:  "_minecraft",
                 proto:    "_tcp",
